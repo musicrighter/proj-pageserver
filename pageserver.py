@@ -48,11 +48,7 @@ def serve(sock, func):
         _thread.start_new_thread(func, (clientsocket,))
 
 
-error = """
-    404 PAGE ERROR\n
-    The file was not found in the directory of the server
-    """
-
+error = "404 PAGE ERROR\n\nThe file was not found in the directory of the server"
 
 def respond(sock):
     """
@@ -68,13 +64,18 @@ def respond(sock):
     if len(parts) > 1 and parts[0] == "GET" and (parts[1].endswith(".html") or parts[1].endswith(".css")):
         transmit("HTTP/1.0 200 OK\n\n", sock)
         path = parts[1].lstrip("/")
-        page = open(path)
-        if os.path.isfile(path):
-          transmit(path, sock)
+        if "~" in path or "//" in path or ".." in path:
+            transmit("\n I don't handle this request: \n\n{}".format(request), sock)
+
+        elif os.path.isfile(path):
+            f = open(path)
+            msg = f.read()
+            transmit(msg, sock)
+            print(path)
         else:
-          transmit(error, sock)
+            transmit(error, sock)
     else:
-        transmit(error, sock)
+        transmit("\n I don't handle this request: \n\n{}".format(request), sock)
 
     sock.close()
 
